@@ -56,6 +56,8 @@ export async function getBoard(boardId: string): Promise<BoardDTO | null> {
               title: true,
               description: true,
               dueDate: true,
+              dueTime: true,
+              assigneeEmail: true,
               position: true,
               labels: { select: { labelId: true } },
               checklist: {

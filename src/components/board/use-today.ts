@@ -1,11 +1,22 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { todayKey } from "@/lib/dates";
+import { nowTimeKey, todayKey } from "@/lib/dates";
+
+// Um único relógio para todos os componentes: avisa a cada 30 segundos.
+const listeners = new Set<() => void>();
+let timer: ReturnType<typeof setInterval> | undefined;
 
 const subscribe = (onChange: () => void) => {
-  const timer = setInterval(onChange, 60_000);
-  return () => clearInterval(timer);
+  listeners.add(onChange);
+  timer ??= setInterval(() => listeners.forEach((l) => l()), 30_000);
+  return () => {
+    listeners.delete(onChange);
+    if (listeners.size === 0) {
+      clearInterval(timer);
+      timer = undefined;
+    }
+  };
 };
 
 /**
@@ -14,4 +25,9 @@ const subscribe = (onChange: () => void) => {
  */
 export function useToday(): string | null {
   return useSyncExternalStore(subscribe, () => todayKey(), () => null);
+}
+
+/** Hora atual no fuso do navegador ("HH:MM"). No servidor devolve null. */
+export function useNowTime(): string | null {
+  return useSyncExternalStore(subscribe, () => nowTimeKey(), () => null);
 }

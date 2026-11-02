@@ -5,6 +5,10 @@ import { CSS } from "@dnd-kit/utilities";
 import { dueStatus, formatDateKey } from "@/lib/dates";
 import { labelClass } from "@/lib/labels";
 import type { CardDTO, LabelDTO } from "@/lib/types";
+import { assigneeName } from "./assignees";
+import { useBoard } from "./board-context";
+import { Avatar } from "./members-button";
+import { useNowTime } from "./use-today";
 
 type CardProps = {
   card: CardDTO;
@@ -61,7 +65,11 @@ export function CardItemView({ card, labels, today, overlay }: CardProps & { ove
   const cardLabels = labels.filter((l) => card.labelIds.includes(l.id));
   const done = card.checklist.filter((i) => i.done).length;
   const total = card.checklist.length;
-  const status = card.dueDate && today ? dueStatus(card.dueDate, today) : "later";
+  const { board } = useBoard();
+  const nowTime = useNowTime();
+  const status =
+    card.dueDate && today ? dueStatus(card.dueDate, today, card.dueTime, nowTime) : "later";
+  const assignee = card.assigneeEmail && assigneeName(board, card.assigneeEmail);
 
   return (
     <article
@@ -82,13 +90,14 @@ export function CardItemView({ card, labels, today, overlay }: CardProps & { ove
         </div>
       )}
       <p className="text-sm break-words text-slate-800">{card.title}</p>
-      {(card.dueDate || card.description || total > 0) && (
+      {(card.dueDate || card.description || total > 0 || assignee) && (
         <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
           {card.dueDate && (
             <span className={`rounded px-1.5 py-0.5 ${DUE_STYLES[status]}`}>
               <span aria-hidden>🕒 </span>
               <span className="sr-only">Entrega: </span>
               {formatDateKey(card.dueDate)}
+              {card.dueTime && ` · ${card.dueTime}`}
             </span>
           )}
           {card.description && (
@@ -104,6 +113,14 @@ export function CardItemView({ card, labels, today, overlay }: CardProps & { ove
               aria-label={`Checklist: ${done} de ${total} concluídos`}
             >
               ☑ {done}/{total}
+            </span>
+          )}
+          {assignee && (
+            <span className="ml-auto" title={`Responsável: ${assignee}`}>
+              <span className="sr-only">Responsável: {assignee}</span>
+              <span aria-hidden>
+                <Avatar name={assignee} className="h-6 w-6 text-[11px]" />
+              </span>
             </span>
           )}
         </div>

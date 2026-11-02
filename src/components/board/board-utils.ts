@@ -1,4 +1,4 @@
-import { addDays } from "@/lib/dates";
+import { addDays, dueStatus } from "@/lib/dates";
 import type { BoardDTO, CardDTO } from "@/lib/types";
 
 // Funções puras para manipular o estado do quadro no cliente.
@@ -52,27 +52,46 @@ export function moveCardIn(
 
 export type DueFilter = "all" | "overdue" | "today" | "week" | "none";
 
+/** "all", "none" (sem responsável) ou o e-mail do responsável. */
+export type AssigneeFilter = string;
+
 export type CardFilters = {
   text: string;
   labelIds: string[];
   due: DueFilter;
+  assignee: AssigneeFilter;
 };
 
-export const EMPTY_FILTERS: CardFilters = { text: "", labelIds: [], due: "all" };
+export const EMPTY_FILTERS: CardFilters = { text: "", labelIds: [], due: "all", assignee: "all" };
 
 export function hasActiveFilters(filters: CardFilters) {
-  return filters.text.trim() !== "" || filters.labelIds.length > 0 || filters.due !== "all";
+  return (
+    filters.text.trim() !== "" ||
+    filters.labelIds.length > 0 ||
+    filters.due !== "all" ||
+    filters.assignee !== "all"
+  );
 }
 
 function normalize(text: string) {
   return text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 }
 
-export function cardMatches(card: CardDTO, filters: CardFilters, today: string | null) {
+export function cardMatches(
+  card: CardDTO,
+  filters: CardFilters,
+  today: string | null,
+  nowTime: string | null,
+) {
   const text = normalize(filters.text.trim());
   if (text && !normalize(`${card.title} ${card.description}`).includes(text)) return false;
 
   if (filters.labelIds.length && !filters.labelIds.some((id) => card.labelIds.includes(id))) {
+    return false;
+  }
+
+  if (filters.assignee === "none" && card.assigneeEmail !== null) return false;
+  if (filters.assignee !== "all" && filters.assignee !== "none" && card.assigneeEmail !== filters.assignee) {
     return false;
   }
 
@@ -83,7 +102,9 @@ export function cardMatches(card: CardDTO, filters: CardFilters, today: string |
       return card.dueDate === null;
     default: {
       if (!card.dueDate || !today) return false;
-      if (filters.due === "overdue") return card.dueDate < today;
+      if (filters.due === "overdue") {
+        return dueStatus(card.dueDate, today, card.dueTime, nowTime) === "overdue";
+      }
       if (filters.due === "today") return card.dueDate === today;
       return card.dueDate >= today && card.dueDate <= addDays(today, 7);
     }

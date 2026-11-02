@@ -187,7 +187,7 @@ function MembersDialog({ onClose }: { onClose: () => void }) {
 
 const AVATAR_COLORS = ["bg-rose-500", "bg-amber-500", "bg-emerald-500", "bg-sky-500", "bg-violet-500"];
 
-function Avatar({ name, className = "" }: { name: string; className?: string }) {
+export function Avatar({ name, className = "" }: { name: string; className?: string }) {
   const hash = [...name].reduce((n, ch) => n + ch.charCodeAt(0), 0);
   return (
     <span

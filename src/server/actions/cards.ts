@@ -28,25 +28,41 @@ export async function createCard(input: unknown) {
       select: { id: true, listId: true, title: true, description: true, position: true },
     });
     revalidateBoard(list.boardId);
-    return { ...card, dueDate: null, labelIds: [], checklist: [] };
+    return { ...card, dueDate: null, dueTime: null, assigneeEmail: null, labelIds: [], checklist: [] };
   });
 }
 
 export async function updateCard(input: unknown) {
   return runAction(async () => {
-    const { cardId, title, description, dueDate } = updateCardSchema.parse(input);
+    const { cardId, title, description, dueDate, dueTime, assigneeEmail } =
+      updateCardSchema.parse(input);
     const card = await requireCard(await getViewer(), cardId);
+    if (assigneeEmail) await requireAssignable(card.boardId, assigneeEmail);
     await prisma.card.update({
       where: { id: cardId },
       data: {
         title,
         description,
         dueDate: dueDate === undefined ? undefined : dueDate && dateKeyToDate(dueDate),
+        // Sem data não há horário.
+        dueTime: dueDate === null ? null : dueTime,
+        assigneeEmail,
       },
     });
     revalidateBoard(card.boardId);
     return null;
   });
+}
+
+/** O responsável precisa ser membro do quadro ou ter um convite pendente nele. */
+async function requireAssignable(boardId: string, email: string) {
+  const [member, invite] = await Promise.all([
+    prisma.boardMember.findFirst({ where: { boardId, user: { email } }, select: { userId: true } }),
+    prisma.boardInvite.findUnique({ where: { boardId_email: { boardId, email } }, select: { email: true } }),
+  ]);
+  if (!member && !invite) {
+    throw new UserFacingError("O responsável precisa ser membro do quadro ou ter um convite.");
+  }
 }
 
 export async function deleteCard(input: unknown) {

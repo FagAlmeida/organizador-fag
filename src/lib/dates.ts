@@ -34,8 +34,22 @@ export function formatDateKey(key: string, options?: Intl.DateTimeFormatOptions)
 
 export type DueStatus = "overdue" | "today" | "soon" | "later";
 
-export function dueStatus(key: string, today: string): DueStatus {
+/** Hora atual no fuso local do navegador, no formato "HH:MM". */
+export function nowTimeKey(now = new Date()): string {
+  const h = String(now.getHours()).padStart(2, "0");
+  const m = String(now.getMinutes()).padStart(2, "0");
+  return `${h}:${m}`;
+}
+
+/** Com horário, a entrega de hoje fica atrasada depois desse horário. */
+export function dueStatus(
+  key: string,
+  today: string,
+  time?: string | null,
+  nowTime?: string | null,
+): DueStatus {
   if (key < today) return "overdue";
+  if (key === today && time && nowTime && time < nowTime) return "overdue";
   if (key === today) return "today";
   if (key <= addDays(today, 2)) return "soon";
   return "later";

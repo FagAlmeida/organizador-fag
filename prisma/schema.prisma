@@ -38,14 +38,18 @@ model List {
 }
 
 model Card {
-  id          String    @id @default(cuid())
-  title       String
-  description String    @default("")
-  dueDate     DateTime?
-  position    Float
-  listId      String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  title         String
+  description   String    @default("")
+  dueDate       DateTime?
+  // Horário de entrega "HH:MM" (fuso de quem usa). Só existe junto com dueDate.
+  dueTime       String?
+  // E-mail do responsável: um membro do quadro ou um convite pendente.
+  assigneeEmail String?
+  position      Float
+  listId        String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   list      List            @relation(fields: [listId], references: [id], onDelete: Cascade)
   labels    CardLabel[]

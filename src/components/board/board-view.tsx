@@ -29,6 +29,7 @@ import { renameBoard } from "@/server/actions/boards";
 import { moveCard } from "@/server/actions/cards";
 import { moveList } from "@/server/actions/lists";
 import { AddListForm } from "./add-forms";
+import { assigneeOptions } from "./assignees";
 import { BoardFilters } from "./board-filters";
 import { BoardProvider, useBoard } from "./board-context";
 import {
@@ -44,7 +45,7 @@ import { CardItemView } from "./card-item";
 import { CardModal } from "./card-modal";
 import { ListColumn, ListColumnView } from "./list-column";
 import { MembersButton } from "./members-button";
-import { useToday } from "./use-today";
+import { useNowTime, useToday } from "./use-today";
 
 export function BoardView({ board }: { board: BoardDTO }) {
   return (
@@ -81,6 +82,7 @@ const collisionDetection: CollisionDetection = (args) => {
 function BoardContent() {
   const { board, setBoard, mutate, setDragging } = useBoard();
   const today = useToday();
+  const nowTime = useNowTime();
   const [filters, setFilters] = useState<CardFilters>(EMPTY_FILTERS);
   const [openCardId, setOpenCardId] = useState<string | null>(null);
   const [active, setActive] = useState<ActiveDrag>(null);
@@ -91,9 +93,9 @@ function BoardContent() {
     if (!filtering) return null;
     const ids = new Set<string>();
     for (const list of board.lists)
-      for (const card of list.cards) if (cardMatches(card, filters, today)) ids.add(card.id);
+      for (const card of list.cards) if (cardMatches(card, filters, today, nowTime)) ids.add(card.id);
     return ids;
-  }, [board, filters, filtering, today]);
+  }, [board, filters, filtering, today, nowTime]);
 
   const totalCards = board.lists.reduce((n, l) => n + l.cards.length, 0);
 
@@ -229,6 +231,7 @@ function BoardContent() {
         </h1>
         <BoardFilters
           labels={board.labels}
+          people={assigneeOptions(board)}
           filters={filters}
           onChange={setFilters}
           resultCount={visibleCards?.size ?? null}

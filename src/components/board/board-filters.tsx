@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { labelClass } from "@/lib/labels";
 import type { LabelDTO } from "@/lib/types";
+import type { AssigneeOption } from "./assignees";
 import { EMPTY_FILTERS, hasActiveFilters, type CardFilters, type DueFilter } from "./board-utils";
 
 const DUE_OPTIONS: { value: DueFilter; label: string }[] = [
@@ -15,13 +16,14 @@ const DUE_OPTIONS: { value: DueFilter; label: string }[] = [
 
 type Props = {
   labels: LabelDTO[];
+  people: AssigneeOption[];
   filters: CardFilters;
   onChange: (filters: CardFilters) => void;
   resultCount: number | null;
   totalCount: number;
 };
 
-export function BoardFilters({ labels, filters, onChange, resultCount, totalCount }: Props) {
+export function BoardFilters({ labels, people, filters, onChange, resultCount, totalCount }: Props) {
   const [labelsOpen, setLabelsOpen] = useState(false);
   const active = hasActiveFilters(filters);
 
@@ -101,6 +103,21 @@ export function BoardFilters({ labels, filters, onChange, resultCount, totalCoun
             {o.label}
           </option>
         ))}
+      </select>
+
+      <select
+        aria-label="Filtrar por responsável"
+        className="input w-auto"
+        value={filters.assignee}
+        onChange={(e) => onChange({ ...filters, assignee: e.target.value })}
+      >
+        <option value="all">Qualquer responsável</option>
+        {people.map((p) => (
+          <option key={p.email} value={p.email}>
+            {p.isViewer ? "Minhas tarefas" : p.name}
+          </option>
+        ))}
+        <option value="none">Sem responsável</option>
       </select>
 
       {active && (

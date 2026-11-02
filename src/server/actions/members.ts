@@ -54,6 +54,7 @@ export async function removeMember(input: unknown) {
         throw new UserFacingError("O dono não pode sair do quadro. Se quiser, exclua o quadro.");
       }
       await prisma.boardMember.delete({ where: { boardId_userId: { boardId, userId } } });
+      await unassign(boardId, userId);
       // Sem revalidar o quadro: quem saiu perderia o acesso antes de voltar à página inicial.
       revalidateHome();
       return null;
@@ -61,6 +62,7 @@ export async function removeMember(input: unknown) {
 
     await requireBoardOwner(viewer, boardId);
     await prisma.boardMember.deleteMany({ where: { boardId, userId } });
+    await unassign(boardId, userId);
     revalidateBoard(boardId);
     return null;
   });
@@ -71,7 +73,21 @@ export async function cancelInvite(input: unknown) {
     const { boardId, email } = cancelInviteSchema.parse(input);
     await requireBoard(await getViewer(), boardId);
     await prisma.boardInvite.deleteMany({ where: { boardId, email } });
+    await prisma.card.updateMany({
+      where: { assigneeEmail: email, list: { boardId } },
+      data: { assigneeEmail: null },
+    });
     revalidateBoard(boardId);
     return null;
+  });
+}
+
+/** Tira a pessoa de responsável pelos cartões do quadro que ela deixou. */
+async function unassign(boardId: string, userId: string) {
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
+  if (!user) return;
+  await prisma.card.updateMany({
+    where: { assigneeEmail: user.email, list: { boardId } },
+    data: { assigneeEmail: null },
   });
 }

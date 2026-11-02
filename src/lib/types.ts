@@ -29,6 +29,10 @@ export type CardDTO = {
   description: string;
   /** "AAAA-MM-DD" ou null */
   dueDate: string | null;
+  /** "HH:MM" ou null; só existe junto com dueDate */
+  dueTime: string | null;
+  /** E-mail do responsável (membro ou convite pendente) ou null */
+  assigneeEmail: string | null;
   position: number;
   labelIds: string[];
   checklist: ChecklistItemDTO[];

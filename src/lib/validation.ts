@@ -13,6 +13,12 @@ const title = (field: string, max = 120) =>
 const index = z.number().int().min(0);
 
 const dateKey = z.iso.date({ error: "Data inválida." });
+const timeKey = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Horário inválido.");
+const email = z
+  .string({ error: "Informe um e-mail válido." })
+  .trim()
+  .toLowerCase()
+  .pipe(z.email({ error: "Informe um e-mail válido." }).max(254));
 
 // Quadros
 export const createBoardSchema = z.object({ title: title("o nome do quadro", 80) });
@@ -20,11 +26,6 @@ export const renameBoardSchema = z.object({ boardId: id, title: title("o nome do
 export const deleteBoardSchema = z.object({ boardId: id });
 
 // Membros
-const email = z
-  .string({ error: "Informe um e-mail válido." })
-  .trim()
-  .toLowerCase()
-  .pipe(z.email({ error: "Informe um e-mail válido." }).max(254));
 export const inviteMemberSchema = z.object({ boardId: id, email });
 export const removeMemberSchema = z.object({ boardId: id, userId: id });
 export const cancelInviteSchema = z.object({ boardId: id, email });
@@ -43,11 +44,12 @@ export const updateCardSchema = z
     title: title("o título do cartão", 200).optional(),
     description: z.string().max(5000, "A descrição pode ter até 5000 caracteres.").optional(),
     dueDate: dateKey.nullable().optional(),
+    dueTime: timeKey.nullable().optional(),
+    assigneeEmail: email.nullable().optional(),
   })
-  .refine(
-    (v) => v.title !== undefined || v.description !== undefined || v.dueDate !== undefined,
-    { message: "Nada para atualizar." },
-  );
+  .refine((v) => Object.keys(v).some((k) => k !== "cardId" && v[k as keyof typeof v] !== undefined), {
+    message: "Nada para atualizar.",
+  });
 export const deleteCardSchema = z.object({ cardId: id });
 export const moveCardSchema = z.object({ cardId: id, toListId: id, toIndex: index });
 

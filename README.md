@@ -74,8 +74,10 @@ O `.env` fica fora do Git (veja o `.gitignore`). Só o `.env.example` é version
 - **Quadros:** criar, renomear, excluir (só o dono, com confirmação) e listar na página inicial.
 - **Listas:** criar, renomear, excluir (com confirmação) e reordenar arrastando pelo cabeçalho.
 - **Cartões:** criar, editar, excluir, reordenar na mesma lista e mover entre listas.
-- **Detalhes do cartão (modal):** título, descrição, data de entrega (com aviso de atrasado, hoje ou em breve), etiquetas coloridas (criar, editar, excluir e aplicar) e checklist com barra de progresso.
-- **Busca e filtros:** por texto (título e descrição, ignorando acentos), por etiqueta e por data de entrega (atrasados, hoje, próximos 7 dias ou sem data). Com um filtro ativo, arrastar cartões fica desativado para evitar posições ambíguas.
+- **Detalhes do cartão (modal):** título, descrição, responsável, data e horário de entrega (com aviso de atrasado, hoje ou em breve), etiquetas coloridas (criar, editar, excluir e aplicar) e checklist com barra de progresso.
+- **Responsável:** cada cartão pode ser atribuído a um membro do quadro ou a um convite pendente (pelo e-mail). Quem sai ou é removido do quadro deixa de ser responsável pelos cartões dele.
+- **Horário de entrega:** opcional, junto com a data. Passado o horário, o cartão do dia aparece como atrasado.
+- **Busca e filtros:** por texto (título e descrição, ignorando acentos), por etiqueta, por responsável (inclusive "Minhas tarefas") e por data de entrega (atrasados, hoje, próximos 7 dias ou sem data). Com um filtro ativo, arrastar cartões fica desativado para evitar posições ambíguas.
 - **Acessibilidade:** arrastar também funciona pelo teclado (Tab até o item, Espaço para pegar, setas para mover, Espaço para soltar, Esc para cancelar). Enter abre o cartão.
 
 ## Arquitetura

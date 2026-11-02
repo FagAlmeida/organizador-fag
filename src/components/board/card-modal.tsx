@@ -13,8 +13,10 @@ import {
   updateChecklistItem,
 } from "@/server/actions/checklist";
 import { createLabel, deleteLabel, setCardLabel, updateLabel } from "@/server/actions/labels";
+import { assigneeOptions } from "./assignees";
 import { useBoard } from "./board-context";
 import { updateCardIn } from "./board-utils";
+import { useNowTime } from "./use-today";
 
 type Props = {
   card: CardDTO;
@@ -99,10 +101,16 @@ export function CardModal({ card, board, today, onClose }: Props) {
         </div>
 
         <aside className="space-y-6">
+          <Assignee
+            value={card.assigneeEmail}
+            board={board}
+            onChange={(assigneeEmail) => patch({ assigneeEmail }, { assigneeEmail })}
+          />
           <DueDate
-            value={card.dueDate}
+            date={card.dueDate}
+            time={card.dueTime}
             today={today}
-            onChange={(dueDate) => patch({ dueDate }, { dueDate })}
+            onChange={(due) => patch(due, due)}
           />
           <Labels card={card} board={board} />
           <div>
@@ -181,30 +189,92 @@ const DUE_TEXT = {
   later: { text: "No prazo", className: "bg-slate-100 text-slate-600" },
 };
 
-function DueDate({
+function Assignee({
   value,
-  today,
+  board,
   onChange,
 }: {
   value: string | null;
-  today: string | null;
+  board: BoardDTO;
   onChange: (value: string | null) => void;
 }) {
-  const status = value && today ? DUE_TEXT[dueStatus(value, today)] : null;
+  const options = assigneeOptions(board);
+  const viewer = options.find((o) => o.isViewer);
+  // Quem saiu do quadro continua aparecendo até alguém trocar o responsável.
+  const missing = value !== null && !options.some((o) => o.email === value);
+
   return (
     <section>
-      <h3 className="section-title">Data de entrega</h3>
-      <input
-        type="date"
-        aria-label="Data de entrega"
+      <h3 className="section-title">Responsável</h3>
+      <select
+        aria-label="Responsável"
         className="input"
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value || null)}
-      />
-      {value && (
+      >
+        <option value="">Ninguém</option>
+        {options.map((o) => (
+          <option key={o.email} value={o.email}>
+            {o.pending ? `${o.email} (convite pendente)` : `${o.name} (${o.email})`}
+          </option>
+        ))}
+        {missing && <option value={value}>{value}</option>}
+      </select>
+      {viewer && value !== viewer.email && (
+        <button
+          type="button"
+          className="btn-ghost mt-1 px-0 text-xs"
+          onClick={() => onChange(viewer.email)}
+        >
+          Atribuir a mim
+        </button>
+      )}
+    </section>
+  );
+}
+
+function DueDate({
+  date,
+  time,
+  today,
+  onChange,
+}: {
+  date: string | null;
+  time: string | null;
+  today: string | null;
+  onChange: (value: { dueDate: string | null; dueTime: string | null }) => void;
+}) {
+  const nowTime = useNowTime();
+  const status = date && today ? DUE_TEXT[dueStatus(date, today, time, nowTime)] : null;
+  return (
+    <section>
+      <h3 className="section-title">Entrega</h3>
+      <div className="flex gap-2">
+        <input
+          type="date"
+          aria-label="Data de entrega"
+          className="input min-w-0 flex-1"
+          value={date ?? ""}
+          onChange={(e) => {
+            const dueDate = e.target.value || null;
+            onChange({ dueDate, dueTime: dueDate ? time : null });
+          }}
+        />
+        <input
+          type="time"
+          aria-label="Horário de entrega"
+          title={date ? undefined : "Escolha a data primeiro"}
+          className="input w-28 shrink-0"
+          disabled={!date}
+          value={time ?? ""}
+          onChange={(e) => onChange({ dueDate: date, dueTime: e.target.value || null })}
+        />
+      </div>
+      {date && (
         <div className="mt-2 flex items-center justify-between gap-2 text-xs">
           <span className="text-slate-600">
-            {formatDateKey(value, { weekday: "short", year: "numeric" })}
+            {formatDateKey(date, { weekday: "short", year: "numeric" })}
+            {time && ` às ${time}`}
           </span>
           {status && (
             <span className={`rounded px-1.5 py-0.5 font-medium ${status.className}`}>
@@ -213,8 +283,12 @@ function DueDate({
           )}
         </div>
       )}
-      {value && (
-        <button type="button" className="btn-ghost mt-1 px-0 text-xs" onClick={() => onChange(null)}>
+      {date && (
+        <button
+          type="button"
+          className="btn-ghost mt-1 px-0 text-xs"
+          onClick={() => onChange({ dueDate: null, dueTime: null })}
+        >
           Remover data
         </button>
       )}
