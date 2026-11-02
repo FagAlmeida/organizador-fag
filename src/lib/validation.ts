@@ -51,6 +51,7 @@ export const updateCardSchema = z
     dueDate: dateKey.nullable().optional(),
     dueTime: timeKey.nullable().optional(),
     assigneeEmail: email.nullable().optional(),
+    done: z.boolean().optional(),
   })
   .refine((v) => Object.keys(v).some((k) => k !== "cardId" && v[k as keyof typeof v] !== undefined), {
     message: "Nada para atualizar.",

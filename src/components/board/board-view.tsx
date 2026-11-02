@@ -224,37 +224,37 @@ function BoardContent() {
     >
       {/* Sobre a foto, uma faixa escura mantém o título e os botões legíveis. */}
       <div className={hasPhoto ? "mb-2 bg-black/35 backdrop-blur-sm" : ""}>
-      <div className="flex flex-wrap items-center gap-3 px-4 pt-3 pb-2">
-        <h1 className="min-w-0 text-lg font-bold text-white">
-          <InlineEdit
-            value={board.title}
-            label="Nome do quadro"
-            maxLength={80}
-            className="block max-w-[70vw] px-2 py-1"
-            onSave={(title) =>
-              mutate(
-                (prev) => ({ ...prev, title }),
-                () => renameBoard({ boardId: board.id, title }),
-              )
-            }
+        <div className="flex flex-wrap items-center gap-3 px-4 pt-3 pb-2">
+          <h1 className="min-w-0 text-lg font-bold text-white">
+            <InlineEdit
+              value={board.title}
+              label="Nome do quadro"
+              maxLength={80}
+              className="block max-w-[70vw] px-2 py-1"
+              onSave={(title) =>
+                mutate(
+                  (prev) => ({ ...prev, title }),
+                  () => renameBoard({ boardId: board.id, title }),
+                )
+              }
+            />
+          </h1>
+          <BoardFilters
+            labels={board.labels}
+            people={assigneeOptions(board)}
+            filters={filters}
+            onChange={setFilters}
+            resultCount={visibleCards?.size ?? null}
+            totalCount={totalCards}
           />
-        </h1>
-        <BoardFilters
-          labels={board.labels}
-          people={assigneeOptions(board)}
-          filters={filters}
-          onChange={setFilters}
-          resultCount={visibleCards?.size ?? null}
-          totalCount={totalCards}
-        />
-        <MembersButton />
-        <BackgroundButton />
-      </div>
-      {filtering && (
-        <p className="px-4 pb-2 text-xs text-white/80">
-          Filtros ativos: arrastar cartões fica desativado até você limpar os filtros.
-        </p>
-      )}
+          <MembersButton />
+          <BackgroundButton />
+        </div>
+        {filtering && (
+          <p className="px-4 pb-2 text-xs text-white/80">
+            Filtros ativos: arrastar cartões fica desativado até você limpar os filtros.
+          </p>
+        )}
       </div>
 
       <DndContext

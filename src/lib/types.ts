@@ -34,6 +34,8 @@ export type CardDTO = {
   dueTime: string | null;
   /** E-mail do responsável (membro ou convite pendente) ou null */
   assigneeEmail: string | null;
+  /** Tarefa finalizada (o cartão fica verde) */
+  done: boolean;
   position: number;
   labelIds: string[];
   checklist: ChecklistItemDTO[];

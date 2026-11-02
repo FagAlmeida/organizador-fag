@@ -48,6 +48,8 @@ model Card {
   dueTime       String?
   // E-mail do responsável: um membro do quadro ou um convite pendente.
   assigneeEmail String?
+  // Marcado na caixinha do cartão quando a tarefa foi finalizada.
+  done          Boolean   @default(false)
   position      Float
   listId        String
   createdAt     DateTime  @default(now())

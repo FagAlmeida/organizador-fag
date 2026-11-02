@@ -5,8 +5,10 @@ import { CSS } from "@dnd-kit/utilities";
 import { dueStatus, formatDateKey } from "@/lib/dates";
 import { labelClass } from "@/lib/labels";
 import type { CardDTO, LabelDTO } from "@/lib/types";
+import { updateCard } from "@/server/actions/cards";
 import { assigneeName } from "./assignees";
 import { useBoard } from "./board-context";
+import { updateCardIn } from "./board-utils";
 import { Avatar } from "./members-button";
 import { useNowTime } from "./use-today";
 
@@ -73,58 +75,100 @@ export function CardItemView({ card, labels, today, overlay }: CardProps & { ove
 
   return (
     <article
-      className={`rounded-lg bg-white px-3 py-2 shadow-sm ring-1 ring-slate-200 transition hover:ring-slate-300 ${
-        overlay ? "rotate-2 shadow-xl" : ""
-      }`}
+      className={`flex gap-2 rounded-lg px-3 py-2 shadow-sm ring-1 transition ${
+        card.done
+          ? "bg-green-100 ring-green-300 hover:ring-green-400"
+          : "bg-white ring-slate-200 hover:ring-slate-300"
+      } ${overlay ? "rotate-2 shadow-xl" : ""}`}
     >
-      {cardLabels.length > 0 && (
-        <div className="mb-1.5 flex flex-wrap gap-1">
-          {cardLabels.map((l) => (
-            <span
-              key={l.id}
-              className={`h-4 min-w-10 rounded px-1.5 text-[10px] leading-4 font-semibold ${labelClass(l.color)}`}
-            >
-              {l.name}
-            </span>
-          ))}
-        </div>
-      )}
-      <p className="text-sm break-words text-slate-800">{card.title}</p>
-      {(card.dueDate || card.description || total > 0 || assignee) && (
-        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-          {card.dueDate && (
-            <span className={`rounded px-1.5 py-0.5 ${DUE_STYLES[status]}`}>
-              <span aria-hidden>🕒 </span>
-              <span className="sr-only">Entrega: </span>
-              {formatDateKey(card.dueDate)}
-              {card.dueTime && ` · ${card.dueTime}`}
-            </span>
-          )}
-          {card.description && (
-            <span title="Este cartão tem descrição" aria-label="Tem descrição">
-              ☰
-            </span>
-          )}
-          {total > 0 && (
-            <span
-              className={`rounded px-1.5 py-0.5 ${
-                done === total ? "bg-green-100 text-green-700" : ""
-              }`}
-              aria-label={`Checklist: ${done} de ${total} concluídos`}
-            >
-              ☑ {done}/{total}
-            </span>
-          )}
-          {assignee && (
-            <span className="ml-auto" title={`Responsável: ${assignee}`}>
-              <span className="sr-only">Responsável: {assignee}</span>
-              <span aria-hidden>
-                <Avatar name={assignee} className="h-6 w-6 text-[11px]" />
+      <DoneCheckbox card={card} readOnly={overlay} />
+      <div className="min-w-0 flex-1">
+        {cardLabels.length > 0 && (
+          <div className="mb-1.5 flex flex-wrap gap-1">
+            {cardLabels.map((l) => (
+              <span
+                key={l.id}
+                className={`h-4 min-w-10 rounded px-1.5 text-[10px] leading-4 font-semibold ${labelClass(l.color)}`}
+              >
+                {l.name}
               </span>
-            </span>
-          )}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+        <p className="text-sm break-words text-slate-800">{card.title}</p>
+        {(card.dueDate || card.description || total > 0 || assignee) && (
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+            {card.dueDate && (
+              <span
+                className={`rounded px-1.5 py-0.5 ${
+                  card.done ? "bg-green-200 text-green-800" : DUE_STYLES[status]
+                }`}
+              >
+                <span aria-hidden>🕒 </span>
+                <span className="sr-only">Entrega: </span>
+                {formatDateKey(card.dueDate)}
+                {card.dueTime && ` · ${card.dueTime}`}
+              </span>
+            )}
+            {card.description && (
+              <span title="Este cartão tem descrição" aria-label="Tem descrição">
+                ☰
+              </span>
+            )}
+            {total > 0 && (
+              <span
+                className={`rounded px-1.5 py-0.5 ${
+                  done === total ? "bg-green-100 text-green-700" : ""
+                }`}
+                aria-label={`Checklist: ${done} de ${total} concluídos`}
+              >
+                ☑ {done}/{total}
+              </span>
+            )}
+            {assignee && (
+              <span className="ml-auto" title={`Responsável: ${assignee}`}>
+                <span className="sr-only">Responsável: {assignee}</span>
+                <span aria-hidden>
+                  <Avatar name={assignee} className="h-6 w-6 text-[11px]" />
+                </span>
+              </span>
+            )}
+          </div>
+        )}
+      </div>
     </article>
+  );
+}
+
+// Eventos que o dnd-kit e o clique do cartão escutam no elemento pai. Parar a
+// propagação deixa marcar a caixinha sem arrastar nem abrir o cartão.
+const stop = (e: React.SyntheticEvent) => e.stopPropagation();
+
+function DoneCheckbox({ card, readOnly }: { card: CardDTO; readOnly?: boolean }) {
+  const { mutate } = useBoard();
+
+  function toggle() {
+    const done = !card.done;
+    mutate(
+      (prev) => updateCardIn(prev, card.id, (c) => ({ ...c, done })),
+      () => updateCard({ cardId: card.id, done }),
+    );
+  }
+
+  return (
+    <input
+      type="checkbox"
+      checked={card.done}
+      disabled={readOnly}
+      onChange={toggle}
+      onClick={stop}
+      onMouseDown={stop}
+      onTouchStart={stop}
+      onPointerDown={stop}
+      onKeyDown={stop}
+      aria-label={card.done ? `Desmarcar "${card.title}" como concluído` : `Marcar "${card.title}" como concluído`}
+      title={card.done ? "Concluído" : "Marcar como concluído"}
+      className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-green-600"
+    />
   );
 }
