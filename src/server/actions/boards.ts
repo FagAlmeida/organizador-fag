@@ -1,6 +1,11 @@
 "use server";
 
-import { createBoardSchema, deleteBoardSchema, renameBoardSchema } from "@/lib/validation";
+import {
+  createBoardSchema,
+  deleteBoardSchema,
+  renameBoardSchema,
+  setBoardBackgroundSchema,
+} from "@/lib/validation";
 import { requireBoard, requireBoardOwner } from "../access";
 import { prisma } from "../db";
 import { runAction } from "../errors";
@@ -25,6 +30,17 @@ export async function renameBoard(input: unknown) {
     const { boardId, title } = renameBoardSchema.parse(input);
     await requireBoard(await getViewer(), boardId);
     await prisma.board.update({ where: { id: boardId }, data: { title } });
+    revalidateHome();
+    revalidateBoard(boardId);
+    return null;
+  });
+}
+
+export async function setBoardBackground(input: unknown) {
+  return runAction(async () => {
+    const { boardId, background } = setBoardBackgroundSchema.parse(input);
+    await requireBoard(await getViewer(), boardId);
+    await prisma.board.update({ where: { id: boardId }, data: { background } });
     revalidateHome();
     revalidateBoard(boardId);
     return null;

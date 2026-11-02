@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import { InlineEdit } from "@/components/ui/inline-edit";
 import { useConfirm } from "@/components/ui/confirm";
 import { useToast } from "@/components/ui/toast";
+import { backgroundUrl, isBoardBackground } from "@/lib/backgrounds";
 import type { BoardSummary } from "@/lib/types";
 import { createBoard, deleteBoard, renameBoard } from "@/server/actions/boards";
 
@@ -100,9 +101,16 @@ function BoardTile({ board }: { board: BoardSummary }) {
 
   return (
     <li
-      className={`group relative flex h-28 flex-col rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 p-4 text-white shadow-sm transition hover:shadow-md ${
+      className={`group relative flex h-28 flex-col rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 bg-cover bg-center p-4 text-white shadow-sm transition hover:shadow-md ${
         deleting ? "opacity-50" : ""
       }`}
+      style={
+        isBoardBackground(board.background)
+          ? {
+              backgroundImage: `linear-gradient(rgb(0 0 0 / 0.35), rgb(0 0 0 / 0.35)), url(${backgroundUrl(board.background, true)})`,
+            }
+          : undefined
+      }
     >
       {editing ? (
         <InlineEdit

@@ -24,12 +24,14 @@ import {
 } from "@dnd-kit/sortable";
 import { useMemo, useRef, useState } from "react";
 import { InlineEdit } from "@/components/ui/inline-edit";
+import { backgroundUrl, isBoardBackground } from "@/lib/backgrounds";
 import type { BoardDTO, CardDTO, ListDTO } from "@/lib/types";
 import { renameBoard } from "@/server/actions/boards";
 import { moveCard } from "@/server/actions/cards";
 import { moveList } from "@/server/actions/lists";
 import { AddListForm } from "./add-forms";
 import { assigneeOptions } from "./assignees";
+import { BackgroundButton } from "./background-button";
 import { BoardFilters } from "./board-filters";
 import { BoardProvider, useBoard } from "./board-context";
 import {
@@ -211,9 +213,17 @@ function BoardContent() {
   }
 
   const openCard = openCardId ? findCard(board, openCardId) : null;
+  const hasPhoto = isBoardBackground(board.background);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-gradient-to-br from-blue-700 to-indigo-800">
+    <div
+      className={`flex min-h-0 flex-1 flex-col ${
+        hasPhoto ? "bg-slate-800 bg-cover bg-center" : "bg-gradient-to-br from-blue-700 to-indigo-800"
+      }`}
+      style={hasPhoto ? { backgroundImage: `url(${backgroundUrl(board.background!)})` } : undefined}
+    >
+      {/* Sobre a foto, uma faixa escura mantém o título e os botões legíveis. */}
+      <div className={hasPhoto ? "mb-2 bg-black/35 backdrop-blur-sm" : ""}>
       <div className="flex flex-wrap items-center gap-3 px-4 pt-3 pb-2">
         <h1 className="min-w-0 text-lg font-bold text-white">
           <InlineEdit
@@ -238,12 +248,14 @@ function BoardContent() {
           totalCount={totalCards}
         />
         <MembersButton />
+        <BackgroundButton />
       </div>
       {filtering && (
         <p className="px-4 pb-2 text-xs text-white/80">
           Filtros ativos: arrastar cartões fica desativado até você limpar os filtros.
         </p>
       )}
+      </div>
 
       <DndContext
         id="board-dnd"

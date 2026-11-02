@@ -12,6 +12,7 @@ export async function listBoards(): Promise<BoardSummary[]> {
     select: {
       id: true,
       title: true,
+      background: true,
       updatedAt: true,
       _count: { select: { lists: true } },
       lists: { select: { _count: { select: { cards: true } } } },
@@ -22,6 +23,7 @@ export async function listBoards(): Promise<BoardSummary[]> {
   return boards.map((b) => ({
     id: b.id,
     title: b.title,
+    background: b.background,
     listCount: b._count.lists,
     cardCount: b.lists.reduce((sum, l) => sum + l._count.cards, 0),
     updatedAt: b.updatedAt.toISOString(),
@@ -36,6 +38,7 @@ export async function getBoard(boardId: string): Promise<BoardDTO | null> {
     select: {
       id: true,
       title: true,
+      background: true,
       labels: { orderBy: { name: "asc" }, select: { id: true, name: true, color: true } },
       members: {
         orderBy: { createdAt: "asc" },
@@ -75,6 +78,7 @@ export async function getBoard(boardId: string): Promise<BoardDTO | null> {
   return {
     id: board.id,
     title: board.title,
+    background: board.background,
     labels: board.labels,
     members: board.members.map(({ role, user }) => ({
       userId: user.id,

@@ -3,6 +3,7 @@
 export type BoardSummary = {
   id: string;
   title: string;
+  background: string | null;
   listCount: number;
   cardCount: number;
   updatedAt: string;
@@ -55,6 +56,8 @@ export type MemberDTO = {
 export type BoardDTO = {
   id: string;
   title: string;
+  /** Chave da foto de fundo (src/lib/backgrounds.ts) ou null */
+  background: string | null;
   labels: LabelDTO[];
   lists: ListDTO[];
   members: MemberDTO[];

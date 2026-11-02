@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { BOARD_BACKGROUNDS } from "./backgrounds";
 import { LABEL_COLORS } from "./labels";
 
 const id = z.string({ error: "Identificador inválido." }).min(1, "Identificador inválido.").max(64);
@@ -24,6 +25,10 @@ const email = z
 export const createBoardSchema = z.object({ title: title("o nome do quadro", 80) });
 export const renameBoardSchema = z.object({ boardId: id, title: title("o nome do quadro", 80) });
 export const deleteBoardSchema = z.object({ boardId: id });
+export const setBoardBackgroundSchema = z.object({
+  boardId: id,
+  background: z.enum(BOARD_BACKGROUNDS, { error: "Fundo inválido." }).nullable(),
+});
 
 // Membros
 export const inviteMemberSchema = z.object({ boardId: id, email });
