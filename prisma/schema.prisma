@@ -1,0 +1,147 @@
+// Schema do Organizador FAG.
+// A ordem de listas, cartões e itens de checklist é guardada no campo `position`
+// (Float), o que permite inserir um item entre dois outros sem reescrever a lista.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Board {
+  id        String   @id @default(cuid())
+  title     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lists   List[]
+  labels  Label[]
+  members BoardMember[]
+  invites BoardInvite[]
+}
+
+model List {
+  id        String   @id @default(cuid())
+  title     String
+  position  Float
+  boardId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  board Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  cards Card[]
+
+  @@index([boardId, position])
+}
+
+model Card {
+  id          String    @id @default(cuid())
+  title       String
+  description String    @default("")
+  dueDate     DateTime?
+  position    Float
+  listId      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  list      List            @relation(fields: [listId], references: [id], onDelete: Cascade)
+  labels    CardLabel[]
+  checklist ChecklistItem[]
+
+  @@index([listId, position])
+}
+
+model Label {
+  id      String @id @default(cuid())
+  name    String
+  color   String
+  boardId String
+
+  board Board       @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  cards CardLabel[]
+
+  @@index([boardId])
+}
+
+// Tabela de junção explícita para que a exclusão em cascata funcione
+// tanto ao apagar o cartão quanto ao apagar a etiqueta.
+model CardLabel {
+  cardId  String
+  labelId String
+
+  card  Card  @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  label Label @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@id([cardId, labelId])
+  @@index([labelId])
+}
+
+model ChecklistItem {
+  id       String  @id @default(cuid())
+  text     String
+  done     Boolean @default(false)
+  position Float
+  cardId   String
+
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@index([cardId, position])
+}
+
+// Usuários entram com a conta Google. `googleId` é o identificador estável
+// do Google (claim `sub`); o e-mail pode mudar, mas é usado nos convites.
+model User {
+  id        String   @id @default(cuid())
+  googleId  String   @unique
+  email     String   @unique
+  name      String
+  image     String?
+  createdAt DateTime @default(now())
+
+  sessions    Session[]
+  memberships BoardMember[]
+}
+
+// O cookie guarda um token aleatório; aqui fica só o hash SHA-256 dele,
+// então um vazamento do banco não permite reutilizar sessões.
+model Session {
+  id        String   @id
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// Quem pode ver e editar cada quadro. `role` é "owner" (quem criou: pode
+// excluir o quadro e remover membros) ou "member".
+model BoardMember {
+  boardId   String
+  userId    String
+  role      String   @default("member")
+  createdAt DateTime @default(now())
+
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([boardId, userId])
+  @@index([userId])
+}
+
+// Convite para um e-mail que ainda não entrou no Organizador. Vira um
+// BoardMember quando a pessoa faz login pela primeira vez.
+model BoardInvite {
+  boardId   String
+  email     String
+  createdAt DateTime @default(now())
+
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  @@id([boardId, email])
+  @@index([email])
+}
