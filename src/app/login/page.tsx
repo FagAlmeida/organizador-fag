@@ -11,6 +11,9 @@ const ERRORS: Record<string, string> = {
   expirado: "O login demorou demais ou foi aberto em outra aba. Tente de novo.",
   google: "Não foi possível confirmar sua conta com o Google. Tente de novo.",
   email: "Sua conta Google não tem um e-mail verificado.",
+  pendente:
+    "Seu pedido de acesso foi enviado. Você poderá entrar assim que o administrador liberar o seu e-mail.",
+  negado: "O acesso deste e-mail ao Organizador não foi liberado.",
 };
 
 export default function LoginPage({ searchParams }: PageProps<"/login">) {
@@ -40,7 +43,12 @@ async function LoginAction({ searchParams }: Pick<PageProps<"/login">, "searchPa
   return (
     <>
       {error && (
-        <p role="alert" className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p
+          role="alert"
+          className={`mt-4 rounded-md px-3 py-2 text-sm ${
+            params.erro === "pendente" ? "bg-amber-50 text-amber-800" : "bg-red-50 text-red-700"
+          }`}
+        >
           {error}
         </p>
       )}

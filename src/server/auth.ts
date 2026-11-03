@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { connection } from "next/server";
 import { cache } from "react";
 import { SESSION_COOKIE } from "@/lib/auth-cookies";
+import { hasAccess } from "./admission";
 import { prisma } from "./db";
 
 const SESSION_DAYS = 30;
@@ -113,5 +114,7 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
     select: { expiresAt: true, user: { select: { id: true, name: true, email: true } } },
   });
   if (!session || session.expiresAt.getTime() < Date.now()) return null;
+  // Quem teve o acesso removido em /admin perde a sessão na próxima requisição.
+  if (!(await hasAccess(session.user.email))) return null;
   return session.user;
 });

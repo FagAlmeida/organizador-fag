@@ -68,6 +68,14 @@ export type BoardDTO = {
   viewerId: string;
 };
 
+export type AccessEntryDTO = {
+  email: string;
+  /** Nome da conta Google de quem pediu, ou null se o admin liberou antes */
+  name: string | null;
+  status: "pending" | "approved" | "denied";
+  updatedAt: string;
+};
+
 export type ActionResult<T = null> =
   | { ok: true; data: T }
   | { ok: false; error: string };

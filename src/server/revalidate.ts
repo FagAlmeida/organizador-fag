@@ -5,6 +5,10 @@ export function revalidateHome() {
   revalidatePath("/");
 }
 
+export function revalidateAdmin() {
+  revalidatePath("/admin");
+}
+
 export function revalidateBoard(boardId: string) {
   revalidatePath(`/boards/${boardId}`);
 }

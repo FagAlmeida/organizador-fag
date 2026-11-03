@@ -51,7 +51,7 @@ function MembersDialog({ onClose }: { onClose: () => void }) {
       toast.success(
         result.data === "added"
           ? "Pessoa adicionada ao quadro."
-          : "Convite registrado. Ele vale assim que a pessoa entrar com esse e-mail.",
+          : "Convite registrado. Ele vale quando a pessoa entrar com esse e-mail, depois que o administrador liberar o acesso dela.",
       );
     });
   }

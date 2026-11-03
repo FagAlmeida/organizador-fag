@@ -7,6 +7,7 @@ import {
   OAUTH_VERIFIER_COOKIE,
   safeNextPath,
 } from "@/lib/auth-cookies";
+import { hasAccess, requestAccess } from "@/server/admission";
 import { createSession, googleClient, upsertGoogleUser } from "@/server/auth";
 
 type GoogleClaims = {
@@ -54,10 +55,17 @@ export async function GET(request: NextRequest) {
 
   if (!claims.email || !claims.email_verified) return fail("email");
 
+  // Só entra quem o administrador liberou; os outros viram um pedido em /admin.
+  const name = claims.name || claims.email;
+  if (!(await hasAccess(claims.email))) {
+    const status = await requestAccess(claims.email, name);
+    return fail(status === "denied" ? "negado" : "pendente");
+  }
+
   const userId = await upsertGoogleUser({
     googleId: claims.sub,
     email: claims.email,
-    name: claims.name || claims.email,
+    name,
     image: claims.picture ?? null,
   });
   await createSession(userId);

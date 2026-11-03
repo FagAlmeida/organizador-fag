@@ -63,12 +63,14 @@ npm start
 | `DATABASE_AUTH_TOKEN`  | `eyJ...`                      | Token do Turso. Vazio no banco local                        |
 | `GOOGLE_CLIENT_ID`     | `123-abc.apps.googleusercontent.com` | ID do cliente OAuth do Google                        |
 | `GOOGLE_CLIENT_SECRET` | `GOCSPX-...`                  | Chave secreta do cliente OAuth do Google                    |
+| `ADMIN_EMAILS`         | `voce@gmail.com`              | Administradores, separados por vírgula: sempre entram e liberam os outros em `/admin` |
 
 O `.env` fica fora do Git (veja o `.gitignore`). Só o `.env.example` é versionado.
 
 ## Funcionalidades
 
 - **Login:** entrar com a conta Google. Cada pessoa vê só os quadros em que é membro.
+- **Acesso liberado pelo administrador:** só entra quem está em `ADMIN_EMAILS` ou foi liberado em `/admin` (link "Acessos" no cabeçalho). Quem tenta entrar sem estar liberado vira um pedido, que o administrador libera ou recusa. Remover o acesso derruba a sessão da pessoa na hora.
 - **Membros:** qualquer membro convida pelo e-mail da conta Google. Se a pessoa ainda não tem conta, o convite fica pendente até ela entrar. O dono (quem criou o quadro) remove membros e exclui o quadro; os outros podem sair.
 - **Atualização automática:** o quadro aberto busca as alterações dos outros membros a cada 5 segundos e ao voltar para a aba.
 - **Quadros:** criar, renomear, excluir (só o dono, com confirmação) e listar na página inicial.
@@ -141,7 +143,7 @@ Excluir um quadro remove suas listas, cartões, etiquetas e checklists (`onDelet
    turso db tokens create organizador-fag   # → DATABASE_AUTH_TOKEN
    ```
 2. **Código:** envie o projeto para um repositório no GitHub e importe-o em [vercel.com/new](https://vercel.com/new).
-3. **Variáveis:** em *Settings → Environment Variables*, cadastre `DATABASE_URL`, `DATABASE_AUTH_TOKEN`, `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET`.
+3. **Variáveis:** em *Settings → Environment Variables*, cadastre `DATABASE_URL`, `DATABASE_AUTH_TOKEN`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` e `ADMIN_EMAILS`.
 4. **Deploy:** a Vercel usa o script `vercel-build`, que aplica as migrações pendentes no Turso antes do `next build`. Depois do primeiro deploy, cadastre a URL de produção no Google (passo 2 de "Login com Google").
 
 ## Observações

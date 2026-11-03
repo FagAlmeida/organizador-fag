@@ -141,6 +141,20 @@ model BoardMember {
   @@index([userId])
 }
 
+// Quem pode entrar no Organizador. Só o administrador (ADMIN_EMAILS) libera.
+// `status`: "pending" (tentou entrar e aguarda), "approved" (liberado) ou
+// "denied" (recusado: não volta para a fila de pedidos).
+model AccessEntry {
+  email     String   @id
+  status    String   @default("pending")
+  // Nome da conta Google de quem pediu; vazio quando o admin liberou antes.
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
+
 // Convite para um e-mail que ainda não entrou no Organizador. Vira um
 // BoardMember quando a pessoa faz login pela primeira vez.
 model BoardInvite {

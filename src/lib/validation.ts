@@ -35,6 +35,9 @@ export const inviteMemberSchema = z.object({ boardId: id, email });
 export const removeMemberSchema = z.object({ boardId: id, userId: id });
 export const cancelInviteSchema = z.object({ boardId: id, email });
 
+// Acesso ao Organizador (só o administrador)
+export const accessEmailSchema = z.object({ email });
+
 // Listas
 export const createListSchema = z.object({ boardId: id, title: title("o nome da lista", 80) });
 export const renameListSchema = z.object({ listId: id, title: title("o nome da lista", 80) });
