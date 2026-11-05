@@ -54,3 +54,18 @@ export function dueStatus(
   if (key <= addDays(today, 2)) return "soon";
   return "later";
 }
+
+const toMinutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
+
+/** Entrega com horário que vence hoje em até `minutes` minutos. */
+export function isDueWithin(
+  key: string,
+  today: string,
+  time: string | null | undefined,
+  nowTime: string | null | undefined,
+  minutes: number,
+): boolean {
+  if (key !== today || !time || !nowTime) return false;
+  const left = toMinutes(time) - toMinutes(nowTime);
+  return left >= 0 && left <= minutes;
+}

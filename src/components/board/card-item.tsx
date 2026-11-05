@@ -2,7 +2,7 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { dueStatus, formatDateKey } from "@/lib/dates";
+import { dueStatus, formatDateKey, isDueWithin } from "@/lib/dates";
 import { labelClass } from "@/lib/labels";
 import type { CardDTO, LabelDTO } from "@/lib/types";
 import { updateCard } from "@/server/actions/cards";
@@ -63,6 +63,9 @@ const DUE_STYLES = {
   later: "bg-slate-100 text-slate-600",
 };
 
+// A partir de quantos minutos antes do horário de entrega o cartão pisca.
+const URGENT_MINUTES = 5;
+
 export function CardItemView({ card, labels, today, overlay }: CardProps & { overlay?: boolean }) {
   const cardLabels = labels.filter((l) => card.labelIds.includes(l.id));
   const done = card.checklist.filter((i) => i.done).length;
@@ -72,14 +75,30 @@ export function CardItemView({ card, labels, today, overlay }: CardProps & { ove
   const status =
     card.dueDate && today ? dueStatus(card.dueDate, today, card.dueTime, nowTime) : "later";
   const assignee = card.assigneeEmail && assigneeName(board, card.assigneeEmail);
+  // Pisca a partir de URGENT_MINUTES antes da entrega e continua depois de vencer.
+  const urgent =
+    !card.done &&
+    (status === "overdue" ||
+      (!!card.dueDate &&
+        !!today &&
+        isDueWithin(card.dueDate, today, card.dueTime, nowTime, URGENT_MINUTES)));
 
   return (
     <article
       className={`flex gap-2 rounded-lg px-3 py-2 shadow-sm ring-1 transition ${
         card.done
           ? "bg-green-100 ring-green-300 hover:ring-green-400"
-          : "bg-white ring-slate-200 hover:ring-slate-300"
+          : urgent
+            ? "card-overdue"
+            : "bg-white ring-slate-200 hover:ring-slate-300"
       } ${overlay ? "rotate-2 shadow-xl" : ""}`}
+      title={
+        urgent
+          ? status === "overdue"
+            ? "Prazo vencido"
+            : "Prazo vence em poucos minutos"
+          : undefined
+      }
     >
       <DoneCheckbox card={card} readOnly={overlay} />
       <div className="min-w-0 flex-1">
